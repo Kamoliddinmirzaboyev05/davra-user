@@ -8,7 +8,7 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'SoccerHub - Book Soccer Fields',
+  title: 'DAVRA USER',
   description: 'Book your favorite soccer fields instantly with SoccerHub',
   generator: 'v0.app',
   icons: {

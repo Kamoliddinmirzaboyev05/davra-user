@@ -5,18 +5,18 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 
 interface OTPVerificationProps {
-  phoneNumber: string;
+  email: string;
   onVerify: (otp: string) => Promise<void>;
-  onChangePhone: () => void;
+  onChangeEmail: () => void;
   isLoading: boolean;
   error: string;
   debugOTP?: string;
 }
 
 export function OTPVerification({
-  phoneNumber,
+  email,
   onVerify,
-  onChangePhone,
+  onChangeEmail,
   isLoading,
   error,
   debugOTP,
@@ -55,12 +55,12 @@ export function OTPVerification({
     <div className="space-y-6">
       <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
         <p className="text-sm text-slate-300 mb-1">Verification code sent to:</p>
-        <p className="text-lg font-semibold text-white">{phoneNumber}</p>
+        <p className="text-lg font-semibold text-white">{email}</p>
         <button
-          onClick={onChangePhone}
+          onClick={onChangeEmail}
           className="text-xs text-emerald-400 hover:text-emerald-300 mt-2 font-medium"
         >
-          Use different number
+          Use different email
         </button>
       </div>
 
@@ -140,7 +140,7 @@ export function OTPVerification({
       </Button>
 
       <p className="text-xs text-slate-400 text-center">
-        Didn't receive the code? Check your phone or try again shortly.
+        Didn't receive the code? Check your email or try again shortly.
       </p>
     </div>
   );

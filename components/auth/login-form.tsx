@@ -5,17 +5,16 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
-import { OTPVerification } from './otp-verification';
+import { CheckCircle } from 'lucide-react';
 
 export function LoginForm() {
   const router = useRouter();
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [step, setStep] = useState<'phone' | 'otp'>('phone');
+  const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [debugOTP, setDebugOTP] = useState('');
+  const [sent, setSent] = useState(false);
 
-  const handleSendOTP = async (e: React.FormEvent) => {
+  const handleSendMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
@@ -24,23 +23,17 @@ export function LoginForm() {
       const response = await fetch('/api/auth/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber }),
+        body: JSON.stringify({ email }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || 'Failed to send OTP');
+        setError(data.error || 'Failed to send magic link');
         return;
       }
 
-      // Store OTP for dev debugging
-      if (data.otp) {
-        setDebugOTP(data.otp);
-      }
-
-      localStorage.setItem('phoneNumber', phoneNumber);
-      setStep('otp');
+      setSent(true);
     } catch (err) {
       setError('Network error. Please try again.');
       console.error(err);
@@ -49,75 +42,56 @@ export function LoginForm() {
     }
   };
 
-  const handleVerifyOTP = async (otp: string) => {
-    setError('');
-    setIsLoading(true);
-
-    try {
-      const response = await fetch('/api/auth/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber, otp }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error || 'Failed to verify OTP');
-        return;
-      }
-
-      // Store auth info
-      localStorage.setItem('userId', data.userId);
-      localStorage.setItem('phoneNumber', data.phoneNumber);
-
-      // Redirect to home
-      router.push('/');
-    } catch (err) {
-      setError('Network error. Please try again.');
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  if (step === 'otp') {
+  if (sent) {
     return (
-      <OTPVerification
-        phoneNumber={phoneNumber}
-        onVerify={handleVerifyOTP}
-        onChangePhone={() => setStep('phone')}
-        isLoading={isLoading}
-        error={error}
-        debugOTP={debugOTP}
-      />
+      <div className="space-y-6">
+        <div className="flex flex-col items-center justify-center space-y-4 py-8">
+          <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center">
+            <CheckCircle className="w-8 h-8 text-emerald-500" />
+          </div>
+          <div className="text-center space-y-2">
+            <h3 className="text-xl font-semibold text-white">Check your email!</h3>
+            <p className="text-slate-300">
+              We sent a magic link to <span className="font-semibold">{email}</span>
+            </p>
+            <p className="text-sm text-slate-400">
+              Click the link in the email to sign in.
+            </p>
+          </div>
+        </div>
+
+        <Button
+          onClick={() => setSent(false)}
+          variant="outline"
+          className="w-full bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
+        >
+          Use different email
+        </Button>
+      </div>
     );
   }
 
   return (
-    <form onSubmit={handleSendOTP} className="space-y-4">
+    <form onSubmit={handleSendMagicLink} className="space-y-4">
       <div>
-        <label htmlFor="phone" className="block text-sm font-medium text-white mb-2">
-          Phone Number
+        <label htmlFor="email" className="block text-sm font-medium text-white mb-2">
+          Email Address
         </label>
         <Input
-          id="phone"
-          type="tel"
-          placeholder="+998 99 123 45 67"
-          value={phoneNumber}
-          onChange={(e) => setPhoneNumber(e.target.value)}
+          id="email"
+          type="email"
+          placeholder="example@email.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           disabled={isLoading}
           className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400"
         />
-        <p className="text-xs text-slate-400 mt-1">Uzbek format: +998 or 0</p>
       </div>
 
       {process.env.NODE_ENV === 'development' && (
         <div className="p-3 bg-blue-900/30 border border-blue-700 rounded-lg text-blue-200 text-xs space-y-1">
-          <p className="font-semibold">🧪 Test raqamlari:</p>
-          <p>+998901234567 → OTP: 111111</p>
-          <p>+998909999999 → OTP: 999999</p>
-          <p>+998900000000 → OTP: 123456</p>
+          <p className="font-semibold">🧪 Development mode:</p>
+          <p>Check your email for the magic link</p>
         </div>
       )}
 
@@ -129,7 +103,7 @@ export function LoginForm() {
 
       <Button
         type="submit"
-        disabled={isLoading || !phoneNumber}
+        disabled={isLoading || !email || !email.includes('@')}
         className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
       >
         {isLoading ? (
@@ -138,12 +112,12 @@ export function LoginForm() {
             Sending...
           </>
         ) : (
-          'Send OTP'
+          'Send Magic Link'
         )}
       </Button>
 
       <p className="text-xs text-slate-400 text-center">
-        We'll send you a verification code via SMS
+        We'll send you a magic link to sign in
       </p>
     </form>
   );
